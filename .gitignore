@@ -1,0 +1,8 @@
+# n8n and local environment
+node_modules/
+.env
+*.env
+.DS_Store
+*.log
+.idea/
+.vscode/
