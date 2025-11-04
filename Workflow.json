@@ -1,0 +1,211 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8df8c4e3-44aa-40b0-881c-6e9ca7290929",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { query: 'Hotels in Bonny Island' } }];"
+      },
+      "id": "e140cead-9de9-45fe-8d37-3ebb3c56cb0a",
+      "name": "Set Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json?engine=google_maps&q=Hotels+in+Bonny+Island,+Rivers+State,+Nigeria&type=search&hl=en&api_key={YOUR_SERP_API_KEY}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "engine",
+              "value": "google_maps"
+            },
+            {
+              "name": "q",
+              "value": "=={{ $json.query }}"
+            },
+            {
+              "name": "api_key",
+              "value": "=={{ $env.SERPAPI_KEY }}"
+            },
+            {
+              "name": "type",
+              "value": "search"
+            },
+            {
+              "name": "hl",
+              "value": "en"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bddd7480-9486-4dd6-84ee-5e6ce6e98325",
+      "name": "Fetch from SerpApi",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        -208
+      ],
+      "credentials": {
+        "serpApi": {
+          "id": "YqwVmsbzuGMpjvAL",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst results = $json.local_results || [];\nreturn results.map(b => ({\n  json: {\n    name: b.title || '',\n    email: b.email || '',\n    website: b.website || '',\n    phone: b.phone || ''\n  }\n}));\n"
+      },
+      "id": "88e2975e-e701-4a2e-acf3-ad9a71403ca6",
+      "name": "Extract Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "name",
+        "options": {}
+      },
+      "id": "a11f29d3-3675-4674-b49f-730fbd4c6c67",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2a00c436-f144-8004-b4ba-d781aca49982",
+          "mode": "list",
+          "cachedResultName": "Generated_Leads",
+          "cachedResultUrl": "https://www.notion.so/2a00c436f1448004b4bad781aca49982"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Name|title",
+              "title": "={{ $json.name }}"
+            },
+            {
+              "key": "Email|rich_text",
+              "textContent": "={{ $json.email }}"
+            },
+            {
+              "key": "Website|select",
+              "selectValue": "={{ $json.website }}"
+            },
+            {
+              "key": "Phone|phone_number",
+              "phoneValue": "={{ $json.phone }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "16ea3687-f297-42eb-9910-3011cd6f231f",
+      "name": "Save to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -208
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "UYnHalTzXGbe9KN2",
+          "name": "Notion account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Query": {
+      "main": [
+        [
+          {
+            "node": "Fetch from SerpApi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch from SerpApi": {
+      "main": [
+        [
+          {
+            "node": "Extract Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Leads": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Save to Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "461359b13196502edaba7b0a057d62727d30b13bf85f175f5eb9d9dc86073126"
+  }
+}
